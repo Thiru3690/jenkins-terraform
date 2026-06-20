@@ -23,33 +23,20 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                dir('terraform-directory') { // Point to your TF files
                     sh 'terraform init'
                 }
-            }
         }
 
         stage('Terraform Plan') {
-            steps {
-                dir('terraform-directory') {
+            steps { 
                     sh 'terraform plan -out=tfplan'
-                }
-            }
-        }
-
-        stage('Approval Gate') {
-            steps {
-                // Pause pipeline to review infrastructure changes
-                input message: 'Do you want to apply these infrastructure changes?', ok: 'Apply'
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                dir('terraform-directory') {
                     sh 'terraform apply -input=false tfplan'
                 }
-            }
         }
     }
 }
