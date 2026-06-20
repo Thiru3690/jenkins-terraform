@@ -1,0 +1,55 @@
+pipeline {
+    agent any
+
+    tools {
+        // Match the exact name you configured in Step 2
+        terraform 'terraform-1.7.5' 
+    }
+
+    environment {
+        // Pass your cloud provider credentials securely
+        AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
+        TF_IN_AUTOMATION      = 'true'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Pull code from your repository
+                checkout scm
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir('terraform-directory') { // Point to your TF files
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir('terraform-directory') {
+                    sh 'terraform plan -out=tfplan'
+                }
+            }
+        }
+
+        stage('Approval Gate') {
+            steps {
+                // Pause pipeline to review infrastructure changes
+                input message: 'Do you want to apply these infrastructure changes?', ok: 'Apply'
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                dir('terraform-directory') {
+                    sh 'terraform apply -input=false tfplan'
+                }
+            }
+        }
+    }
+}
